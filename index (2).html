@@ -1,135 +1,153 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>AI Fitness Coach</title>
-    <style>
-        *{margin:0;padding:0;box-sizing:border-box}
-        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f3f4f6}
-        .container{display:flex;flex-direction:column;height:100vh}
-        .header{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:white;padding:14px 16px}
-        .header h1{font-size:19px;font-weight:bold;margin-bottom:2px}
-        .header p{font-size:12px;opacity:.9}
-        .content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
-        .tabs{background:white;border-top:1px solid #e5e7eb;display:flex;box-shadow:0 -2px 4px rgba(0,0,0,.05)}
-        .tab{flex:1;padding:9px 2px;text-align:center;cursor:pointer;border-top:2px solid transparent}
-        .tab.active{background:#eff6ff;color:#2563eb;border-top-color:#2563eb}
-        .tab-icon{font-size:20px;margin-bottom:1px}
-        .tab-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
-        .chat-wrap{display:flex;flex-direction:column;height:100%}
-        .messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:#f9fafb}
-        .message{display:flex}.message.user{justify-content:flex-end}
-        .bubble{max-width:85%;padding:11px 13px;border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.08)}
-        .message.user .bubble{background:#2563eb;color:white}
-        .message.assistant .bubble{background:white;color:#1f2937;border:1px solid #e5e7eb}
-        .msg-text{font-size:14px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word}
-        .msg-time{font-size:11px;opacity:.6;margin-top:3px}
-        .msg-thumb{max-width:160px;border-radius:8px;margin-bottom:6px;display:block}
-        .input-area{background:white;border-top:1px solid #e5e7eb;padding:10px;display:flex;gap:8px}
-        .input-area input{flex:1;padding:11px;border:1px solid #d1d5db;border-radius:8px;font-size:14px}
-        .input-area button{background:#2563eb;color:white;padding:11px 18px;border:none;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer}
-        .input-area button:disabled{background:#9ca3af}
-        .dots{display:flex;align-items:center;gap:4px;padding:4px 0}
-        .dot{width:8px;height:8px;background:#2563eb;border-radius:50%;animation:bop 1.4s infinite ease-in-out}
-        .dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
-        @keyframes bop{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
-        .section{padding:14px}
-        .card{background:white;border-radius:10px;padding:15px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.09)}
-        .card h3{font-size:15px;font-weight:700;margin-bottom:12px}
-        .form-group{margin-bottom:11px}
-        .form-group label{display:block;font-size:12px;font-weight:600;margin-bottom:4px;color:#374151}
-        .form-group select,.form-group input[type=text],.form-group input[type=number],.form-group textarea{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;font-size:14px}
-        .form-group textarea{resize:none}
-        .vrow{display:flex;gap:8px;align-items:center}
-        .vrow input,.vrow textarea{flex:1;padding:10px;border:1px solid #d1d5db;border-radius:6px;font-size:14px}
-        .vrow textarea{resize:none}
-        .mic-btn{flex-shrink:0;width:40px;height:40px;border:none;border-radius:50%;background:#e5e7eb;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center}
-        .mic-btn.listening{background:#fee2e2;animation:pulse 1s infinite}
-        @keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
-        .vstatus{font-size:11px;color:#ef4444;font-style:italic;margin-top:3px;min-height:15px}
-        .btn{width:100%;padding:12px;border:none;border-radius:7px;font-weight:600;font-size:14px;cursor:pointer;margin-top:4px}
-        .btn-blue{background:#2563eb;color:white}.btn-green{background:#059669;color:white}.btn-purple{background:#7c3aed;color:white}
-        .btn-sm{padding:8px 14px;font-size:13px;border:none;border-radius:7px;font-weight:600;cursor:pointer;color:white}
-        .photo-btns{display:flex;gap:8px;margin-bottom:10px}
-        .photo-btn{flex:1;padding:10px;border:1px solid #d1d5db;border-radius:7px;background:white;font-size:13px;font-weight:600;cursor:pointer}
-        .photo-preview{width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:8px}
-        .ai-box{border-radius:7px;padding:10px;font-size:12px;margin-bottom:10px}
-        .ai-box.ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#065f46}
-        .ai-box.wait{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;text-align:center}
-        .hist{border-left:4px solid #2563eb;padding:11px;background:#eff6ff;border-radius:0 7px 7px 0;margin-bottom:8px}
-        .hist.meal{border-left-color:#059669;background:#f0fdf4}
-        .hist.sleep{border-left-color:#7c3aed;background:#faf5ff}
-        .hist h4{font-size:13px;font-weight:700;margin-bottom:3px}
-        .hist p{font-size:12px;color:#4b5563;margin-bottom:2px}
-        .hist-thumb{width:52px;height:52px;object-fit:cover;border-radius:6px;float:right;margin-left:8px}
-        .q-btns{display:flex;gap:6px}
-        .q-btn{flex:1;padding:9px 4px;border:2px solid #e5e7eb;border-radius:7px;background:white;font-size:12px;font-weight:600;cursor:pointer;text-align:center}
-        .q-btn.sel{border-color:#7c3aed;background:#faf5ff;color:#7c3aed}
-        .macro-card{background:white;border-radius:12px;padding:15px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.09)}
-        .macro-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-        .macro-header h3{font-size:15px;font-weight:700}
-        .macro-date{font-size:12px;color:#6b7280}
-        .cal-ring-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:16px}
-        .cal-ring{position:relative;width:130px;height:130px}
-        .cal-ring svg{transform:rotate(-90deg)}
-        .cal-ring-bg{fill:none;stroke:#f3f4f6;stroke-width:10}
-        .cal-ring-fill{fill:none;stroke-width:10;stroke-linecap:round;transition:stroke-dashoffset .6s ease}
-        .cal-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
-        .cal-remain{font-size:26px;font-weight:800;line-height:1}
-        .cal-label{font-size:10px;color:#6b7280;margin-top:2px}
-        .cal-sub{font-size:11px;color:#6b7280;margin-top:6px;text-align:center}
-        .macro-bars{display:flex;flex-direction:column;gap:10px}
-        .mbar-row{display:flex;align-items:center;gap:10px}
-        .mbar-label{width:54px;font-size:12px;font-weight:600;color:#374151}
-        .mbar-track{flex:1;height:10px;background:#f3f4f6;border-radius:99px;overflow:hidden}
-        .mbar-fill{height:100%;border-radius:99px;transition:width .5s ease}
-        .mbar-nums{width:80px;font-size:11px;color:#6b7280;text-align:right}
-        .log-macro-row{display:flex;gap:8px;margin-top:14px}
-        .log-macro-row input{flex:1;padding:9px;border:1px solid #d1d5db;border-radius:7px;font-size:13px}
-        .log-macro-row button{background:#059669;color:white;border:none;border-radius:7px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer}
-        .macro-meals-list{margin-top:12px;border-top:1px solid #f3f4f6;padding-top:10px}
-        .macro-meal-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f9fafb;font-size:12px}
-        .macro-meal-item .name{color:#374151;font-weight:500;flex:1}
-        .macro-meal-item .cals{color:#6b7280;margin-left:8px}
-        .macro-meal-item .del{background:none;border:none;color:#ef4444;cursor:pointer;font-size:14px;padding:0 4px}
-        .targets-row{display:flex;gap:8px;margin-top:12px}
-        .targets-row input{flex:1;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;text-align:center}
-        .targets-row button{background:#2563eb;color:white;border:none;border-radius:6px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
-        .macro-toggle{display:flex;background:#f3f4f6;border-radius:8px;padding:3px;margin-bottom:14px}
-        .macro-toggle button{flex:1;padding:7px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:#6b7280}
-        .macro-toggle button.active{background:white;color:#1f2937;box-shadow:0 1px 3px rgba(0,0,0,.1)}
-        .ai-macro-btn{width:100%;padding:10px;border:1px dashed #2563eb;border-radius:7px;background:#f0f9ff;color:#2563eb;font-size:13px;font-weight:600;cursor:pointer;margin-top:10px}
-        .sched{padding:12px}
-        .sched-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
-        .sched-top h2{font-size:16px;font-weight:700}
-        .sched-meta{font-size:12px;color:#6b7280;margin-bottom:12px;text-align:center}
-        .week-nav{display:flex;align-items:center;gap:8px;margin-bottom:12px}
-        .week-nav span{flex:1;text-align:center;font-size:13px;font-weight:600;color:#374151}
-        .nav-btn{background:#e5e7eb;border:none;border-radius:6px;padding:5px 11px;cursor:pointer;font-size:15px}
-        .day-card{background:white;border-radius:10px;padding:13px;margin-bottom:9px;box-shadow:0 1px 3px rgba(0,0,0,.08);border-left:4px solid #e5e7eb}
-        .day-card.today{border-left-color:#2563eb}.day-card.done{border-left-color:#059669;opacity:.85}
-        .day-card.skipped{border-left-color:#f59e0b;opacity:.78}.day-card.rest-day{border-left-color:#a78bfa}
-        .day-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
-        .day-name{font-size:14px;font-weight:700}.day-date{font-size:11px;color:#6b7280}
-        .badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px}
-        .b-today{background:#dbeafe;color:#1d4ed8}.b-done{background:#d1fae5;color:#065f46}.b-skip{background:#fef3c7;color:#92400e}
-        .day-workout{font-size:13px;color:#374151;line-height:1.5;margin-bottom:6px}
-        .day-note{font-size:12px;color:#6b7280;font-style:italic}
-        .day-acts{display:flex;gap:6px;margin-top:9px}
-        .dab{flex:1;padding:7px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer}
-        .dab-done{background:#d1fae5;color:#065f46}.dab-skip{background:#fef3c7;color:#92400e}
-        .dab-adj{background:#ede9fe;color:#5b21b6}.dab-undo{background:#f3f4f6;color:#374151}
-        .gen-spinner{text-align:center;padding:30px 20px}
-        .spinner{width:34px;height:34px;border:3px solid #e5e7eb;border-top-color:#2563eb;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px}
-        @keyframes spin{to{transform:rotate(360deg)}}
-        .err-box{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;font-size:12px;color:#991b1b;margin-bottom:12px}
-        .stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-        .stat-box{text-align:center;padding:14px 8px;background:#eff6ff;border-radius:8px}
-        .stat-box .num{font-size:26px;font-weight:700;color:#2563eb}
-        .stat-box .lbl{font-size:11px;color:#6b7280;margin-top:3px}
-        .quick-btn{width:100%;padding:13px;margin-bottom:8px;border:none;border-radius:8px;font-weight:600;font-size:13px;color:white;cursor:pointer;text-align:left}
-    </style>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>AI Fitness Coach</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:#f3f4f6}
+.container{display:flex;flex-direction:column;height:100vh}
+.header{background:linear-gradient(135deg,#2563eb,#1d4ed8);color:white;padding:14px 16px}
+.header h1{font-size:19px;font-weight:bold;margin-bottom:2px}
+.header p{font-size:12px;opacity:.9}
+.content{flex:1;overflow-y:auto;-webkit-overflow-scrolling:touch}
+.tabs{background:white;border-top:1px solid #e5e7eb;display:flex;box-shadow:0 -2px 4px rgba(0,0,0,.05)}
+.tab{flex:1;padding:9px 2px;text-align:center;cursor:pointer;border-top:2px solid transparent}
+.tab.active{background:#eff6ff;color:#2563eb;border-top-color:#2563eb}
+.tab-icon{font-size:20px;margin-bottom:1px}
+.tab-label{font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.3px}
+/* SETUP SCREEN */
+.setup-screen{display:flex;flex-direction:column;align-items:center;justify-content:center;height:100vh;padding:32px;background:#f3f4f6}
+.setup-card{background:white;border-radius:16px;padding:28px;width:100%;max-width:400px;box-shadow:0 4px 16px rgba(0,0,0,.1)}
+.setup-card h2{font-size:20px;font-weight:800;margin-bottom:8px;color:#1f2937}
+.setup-card p{font-size:14px;color:#6b7280;margin-bottom:20px;line-height:1.5}
+.setup-card input{width:100%;padding:12px;border:1px solid #d1d5db;border-radius:8px;font-size:14px;margin-bottom:12px;font-family:monospace}
+.setup-card button{width:100%;padding:13px;background:#2563eb;color:white;border:none;border-radius:8px;font-size:15px;font-weight:700;cursor:pointer}
+.setup-card .hint{font-size:12px;color:#9ca3af;margin-top:12px;text-align:center;line-height:1.5}
+.setup-card .err{color:#dc2626;font-size:13px;margin-bottom:10px;display:none}
+.setup-steps{background:#f9fafb;border-radius:8px;padding:14px;margin-bottom:16px}
+.setup-steps p{font-size:13px;color:#374151;margin-bottom:6px;font-weight:600}
+.setup-steps ol{padding-left:18px}
+.setup-steps li{font-size:12px;color:#6b7280;margin-bottom:4px;line-height:1.4}
+/* CHAT */
+.chat-wrap{display:flex;flex-direction:column;height:100%}
+.messages{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:#f9fafb}
+.message{display:flex}.message.user{justify-content:flex-end}
+.bubble{max-width:85%;padding:11px 13px;border-radius:12px;box-shadow:0 1px 2px rgba(0,0,0,.08)}
+.message.user .bubble{background:#2563eb;color:white}
+.message.assistant .bubble{background:white;color:#1f2937;border:1px solid #e5e7eb}
+.msg-text{font-size:14px;line-height:1.5;white-space:pre-wrap;word-wrap:break-word}
+.msg-time{font-size:11px;opacity:.6;margin-top:3px}
+.msg-thumb{max-width:160px;border-radius:8px;margin-bottom:6px;display:block}
+.input-area{background:white;border-top:1px solid #e5e7eb;padding:10px;display:flex;gap:8px}
+.input-area input{flex:1;padding:11px;border:1px solid #d1d5db;border-radius:8px;font-size:14px}
+.input-area button{background:#2563eb;color:white;padding:11px 18px;border:none;border-radius:8px;font-weight:600;font-size:14px;cursor:pointer}
+.input-area button:disabled{background:#9ca3af}
+.dots{display:flex;align-items:center;gap:4px;padding:4px 0}
+.dot{width:8px;height:8px;background:#2563eb;border-radius:50%;animation:bop 1.4s infinite ease-in-out}
+.dot:nth-child(2){animation-delay:.2s}.dot:nth-child(3){animation-delay:.4s}
+@keyframes bop{0%,80%,100%{transform:scale(0)}40%{transform:scale(1)}}
+/* FORMS */
+.section{padding:14px}
+.card{background:white;border-radius:10px;padding:15px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.09)}
+.card h3{font-size:15px;font-weight:700;margin-bottom:12px}
+.form-group{margin-bottom:11px}
+.form-group label{display:block;font-size:12px;font-weight:600;margin-bottom:4px;color:#374151}
+.form-group select,.form-group input[type=text],.form-group input[type=number],.form-group textarea{width:100%;padding:10px;border:1px solid #d1d5db;border-radius:6px;font-size:14px}
+.form-group textarea{resize:none}
+.vrow{display:flex;gap:8px;align-items:center}
+.vrow input,.vrow textarea{flex:1;padding:10px;border:1px solid #d1d5db;border-radius:6px;font-size:14px}
+.vrow textarea{resize:none}
+.mic-btn{flex-shrink:0;width:40px;height:40px;border:none;border-radius:50%;background:#e5e7eb;font-size:17px;cursor:pointer;display:flex;align-items:center;justify-content:center}
+.mic-btn.listening{background:#fee2e2;animation:pulse 1s infinite}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 0 rgba(239,68,68,.4)}50%{box-shadow:0 0 0 8px rgba(239,68,68,0)}}
+.vstatus{font-size:11px;color:#ef4444;font-style:italic;margin-top:3px;min-height:15px}
+.btn{width:100%;padding:12px;border:none;border-radius:7px;font-weight:600;font-size:14px;cursor:pointer;margin-top:4px}
+.btn-blue{background:#2563eb;color:white}.btn-green{background:#059669;color:white}.btn-purple{background:#7c3aed;color:white}
+.btn-sm{padding:8px 14px;font-size:13px;border:none;border-radius:7px;font-weight:600;cursor:pointer;color:white}
+.photo-btns{display:flex;gap:8px;margin-bottom:10px}
+.photo-btn{flex:1;padding:10px;border:1px solid #d1d5db;border-radius:7px;background:white;font-size:13px;font-weight:600;cursor:pointer}
+.photo-preview{width:100%;max-height:180px;object-fit:cover;border-radius:8px;margin-bottom:8px}
+.ai-box{border-radius:7px;padding:10px;font-size:12px;margin-bottom:10px}
+.ai-box.ok{background:#f0fdf4;border:1px solid #bbf7d0;color:#065f46}
+.ai-box.wait{background:#eff6ff;border:1px solid #bfdbfe;color:#1e40af;text-align:center}
+.hist{border-left:4px solid #2563eb;padding:11px;background:#eff6ff;border-radius:0 7px 7px 0;margin-bottom:8px}
+.hist.meal{border-left-color:#059669;background:#f0fdf4}
+.hist.sleep{border-left-color:#7c3aed;background:#faf5ff}
+.hist h4{font-size:13px;font-weight:700;margin-bottom:3px}
+.hist p{font-size:12px;color:#4b5563;margin-bottom:2px}
+.hist-thumb{width:52px;height:52px;object-fit:cover;border-radius:6px;float:right;margin-left:8px}
+.q-btns{display:flex;gap:6px}
+.q-btn{flex:1;padding:9px 4px;border:2px solid #e5e7eb;border-radius:7px;background:white;font-size:12px;font-weight:600;cursor:pointer;text-align:center}
+.q-btn.sel{border-color:#7c3aed;background:#faf5ff;color:#7c3aed}
+/* MACROS */
+.macro-card{background:white;border-radius:12px;padding:15px;margin-bottom:14px;box-shadow:0 1px 3px rgba(0,0,0,.09)}
+.macro-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.macro-header h3{font-size:15px;font-weight:700}
+.macro-date{font-size:12px;color:#6b7280}
+.cal-ring-wrap{display:flex;flex-direction:column;align-items:center;margin-bottom:16px}
+.cal-ring{position:relative;width:130px;height:130px}
+.cal-ring svg{transform:rotate(-90deg)}
+.cal-ring-bg{fill:none;stroke:#f3f4f6;stroke-width:10}
+.cal-ring-fill{fill:none;stroke-width:10;stroke-linecap:round}
+.cal-center{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);text-align:center}
+.cal-remain{font-size:26px;font-weight:800;line-height:1}
+.cal-label{font-size:10px;color:#6b7280;margin-top:2px}
+.cal-sub{font-size:11px;color:#6b7280;margin-top:6px;text-align:center}
+.macro-bars{display:flex;flex-direction:column;gap:10px}
+.mbar-row{display:flex;align-items:center;gap:10px}
+.mbar-label{width:54px;font-size:12px;font-weight:600;color:#374151}
+.mbar-track{flex:1;height:10px;background:#f3f4f6;border-radius:99px;overflow:hidden}
+.mbar-fill{height:100%;border-radius:99px}
+.mbar-nums{width:80px;font-size:11px;color:#6b7280;text-align:right}
+.log-macro-row{display:flex;gap:8px;margin-top:14px}
+.log-macro-row input{flex:1;padding:9px;border:1px solid #d1d5db;border-radius:7px;font-size:13px}
+.log-macro-row button{background:#059669;color:white;border:none;border-radius:7px;padding:9px 14px;font-size:13px;font-weight:600;cursor:pointer}
+.macro-meals-list{margin-top:12px;border-top:1px solid #f3f4f6;padding-top:10px}
+.macro-meal-item{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid #f9fafb;font-size:12px}
+.macro-meal-item .name{color:#374151;font-weight:500;flex:1}
+.macro-meal-item .cals{color:#6b7280;margin-left:8px}
+.macro-meal-item .del{background:none;border:none;color:#ef4444;cursor:pointer;font-size:14px;padding:0 4px}
+.targets-row{display:flex;gap:8px;margin-top:12px}
+.targets-row input{flex:1;padding:8px;border:1px solid #d1d5db;border-radius:6px;font-size:12px;text-align:center}
+.targets-row button{background:#2563eb;color:white;border:none;border-radius:6px;padding:8px 12px;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap}
+.macro-toggle{display:flex;background:#f3f4f6;border-radius:8px;padding:3px;margin-bottom:14px}
+.macro-toggle button{flex:1;padding:7px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer;background:transparent;color:#6b7280}
+.macro-toggle button.active{background:white;color:#1f2937;box-shadow:0 1px 3px rgba(0,0,0,.1)}
+.ai-macro-btn{width:100%;padding:10px;border:1px dashed #2563eb;border-radius:7px;background:#f0f9ff;color:#2563eb;font-size:13px;font-weight:600;cursor:pointer;margin-top:10px}
+/* SCHEDULE */
+.sched{padding:12px}
+.sched-top{display:flex;align-items:center;justify-content:space-between;margin-bottom:10px}
+.sched-top h2{font-size:16px;font-weight:700}
+.sched-meta{font-size:12px;color:#6b7280;margin-bottom:12px;text-align:center}
+.week-nav{display:flex;align-items:center;gap:8px;margin-bottom:12px}
+.week-nav span{flex:1;text-align:center;font-size:13px;font-weight:600;color:#374151}
+.nav-btn{background:#e5e7eb;border:none;border-radius:6px;padding:5px 11px;cursor:pointer;font-size:15px}
+.day-card{background:white;border-radius:10px;padding:13px;margin-bottom:9px;box-shadow:0 1px 3px rgba(0,0,0,.08);border-left:4px solid #e5e7eb}
+.day-card.today{border-left-color:#2563eb}.day-card.done{border-left-color:#059669;opacity:.85}
+.day-card.skipped{border-left-color:#f59e0b;opacity:.78}.day-card.rest-day{border-left-color:#a78bfa}
+.day-hdr{display:flex;align-items:center;justify-content:space-between;margin-bottom:5px}
+.day-name{font-size:14px;font-weight:700}.day-date{font-size:11px;color:#6b7280}
+.badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px}
+.b-today{background:#dbeafe;color:#1d4ed8}.b-done{background:#d1fae5;color:#065f46}.b-skip{background:#fef3c7;color:#92400e}
+.day-workout{font-size:13px;color:#374151;line-height:1.5;margin-bottom:6px}
+.day-note{font-size:12px;color:#6b7280;font-style:italic}
+.day-acts{display:flex;gap:6px;margin-top:9px}
+.dab{flex:1;padding:7px;border:none;border-radius:6px;font-size:12px;font-weight:600;cursor:pointer}
+.dab-done{background:#d1fae5;color:#065f46}.dab-skip{background:#fef3c7;color:#92400e}
+.dab-adj{background:#ede9fe;color:#5b21b6}.dab-undo{background:#f3f4f6;color:#374151}
+.gen-spinner{text-align:center;padding:30px 20px}
+.spinner{width:34px;height:34px;border:3px solid #e5e7eb;border-top-color:#2563eb;border-radius:50%;animation:spin .8s linear infinite;margin:0 auto 10px}
+@keyframes spin{to{transform:rotate(360deg)}}
+.err-box{background:#fef2f2;border:1px solid #fecaca;border-radius:8px;padding:12px;font-size:12px;color:#991b1b;margin-bottom:12px}
+/* PROFILE */
+.stats-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+.stat-box{text-align:center;padding:14px 8px;background:#eff6ff;border-radius:8px}
+.stat-box .num{font-size:26px;font-weight:700;color:#2563eb}
+.stat-box .lbl{font-size:11px;color:#6b7280;margin-top:3px}
+.quick-btn{width:100%;padding:13px;margin-bottom:8px;border:none;border-radius:8px;font-weight:600;font-size:13px;color:white;cursor:pointer;text-align:left}
+</style>
 </head>
 <body>
 <div id="root"></div>
@@ -162,13 +180,21 @@ function toB64(file){return new Promise((res,rej)=>{const r=new FileReader();r.o
 function isSundayEvening(){const n=new Date();return n.getDay()===0&&n.getHours()>=18;}
 function thisWeekKey(off=0){return getWeekStart(off).toISOString().slice(0,10);}
 
-// ── CLAUDE API — with correct CORS header for external hosting ──
+// ── API KEY ──
+function getKey(){return localStorage.getItem('anthropic_key')||'';}
+function saveKey(k){localStorage.setItem('anthropic_key',k);}
+
+// ── CLAUDE API ──
 async function claude(messages,maxTokens=1000){
+    const key=getKey();
+    if(!key)throw new Error('No API key set');
     const res=await fetch('https://api.anthropic.com/v1/messages',{
         method:'POST',
         mode:'cors',
         headers:{
             'Content-Type':'application/json',
+            'x-api-key':key,
+            'anthropic-version':'2023-06-01',
             'anthropic-dangerous-direct-browser-access':'true'
         },
         body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:maxTokens,messages})
@@ -189,24 +215,63 @@ const App={
         photoData:null,photoURL:null,aiExtract:null,analyzing:false,
         sleepQuality:'good',
         macroTargets:{...DEFAULT_TARGETS},
-        macroLog:{},
-        macroView:'today'
+        macroLog:{},macroView:'today',
+        apiKeyInput:''
     },
 
-    init(){this.load();this.render();this.setupEvents();this.checkAutoGenerate();setInterval(()=>this.checkAutoGenerate(),30*60*1000);},
+    init(){
+        this.load();
+        this.render();
+        this.setupEvents();
+        if(getKey()){
+            this.checkAutoGenerate();
+            setInterval(()=>this.checkAutoGenerate(),30*60*1000);
+        }
+    },
 
     load(){
         ['workouts','meals','sleep','messages','schedule','macroTargets','macroLog','vo2MaxLog'].forEach(k=>{
             try{const v=localStorage.getItem(k);if(v)this.d[k]=JSON.parse(v);}catch(e){}
         });
         if(!this.d.messages.length){
-            this.d.messages=[{role:'assistant',content:"Hey! I'm your AI fitness coach.\n\nProfile: 41M · 150 lbs · Advanced runner + weights.\n\nYour ultimate goal: VO2Max of 50 🎯\n\nYour weekly schedule auto-generates Sunday evenings. Check the Schedule tab for today's plan and macro tracker!",time:new Date().toISOString()}];
+            this.d.messages=[{role:'assistant',content:"Hey! I'm your AI fitness coach.\n\nProfile: 41M · 150 lbs · Advanced runner + weights.\nUltimate goal: VO2Max of 50 🎯\n\nYour weekly schedule auto-generates Sunday evenings and adjusts as you train. Let's go!",time:new Date().toISOString()}];
             this.save('messages',this.d.messages);
         }
         if(!this.d.vo2MaxLog)this.d.vo2MaxLog=[];
     },
 
     save(k,v){try{localStorage.setItem(k,JSON.stringify(v));}catch(e){}},
+
+    async validateAndSaveKey(key){
+        const errEl=document.getElementById('key-err');
+        const btn=document.getElementById('key-save-btn');
+        if(!key||!key.startsWith('sk-ant-')){
+            if(errEl){errEl.style.display='block';errEl.textContent='Key must start with sk-ant-';}
+            return;
+        }
+        btn.textContent='Testing…';btn.disabled=true;
+        try{
+            // test the key with a minimal call
+            const res=await fetch('https://api.anthropic.com/v1/messages',{
+                method:'POST',mode:'cors',
+                headers:{'Content-Type':'application/json','x-api-key':key,'anthropic-version':'2023-06-01','anthropic-dangerous-direct-browser-access':'true'},
+                body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:10,messages:[{role:'user',content:'Hi'}]})
+            });
+            if(!res.ok){
+                const t=await res.json();
+                if(errEl){errEl.style.display='block';errEl.textContent=t.error?.message||'Invalid key';}
+                btn.textContent='Save & Continue';btn.disabled=false;
+                return;
+            }
+            saveKey(key);
+            this.checkAutoGenerate();
+            setInterval(()=>this.checkAutoGenerate(),30*60*1000);
+            this.render();
+        }catch(e){
+            if(errEl){errEl.style.display='block';errEl.textContent='Could not connect. Check your internet.';}
+            btn.textContent='Save & Continue';btn.disabled=false;
+        }
+    },
 
     checkAutoGenerate(){
         const key=thisWeekKey(0);
@@ -215,31 +280,25 @@ const App={
     },
 
     async autoAdjustSchedule(){
-        if(!this.d.schedule)return;
-        if(this.d.schedule.weekKey!==thisWeekKey(0))return;
+        if(!this.d.schedule||this.d.schedule.weekKey!==thisWeekKey(0))return;
         const today=new Date();today.setHours(0,0,0,0);
         const pending=this.d.schedule.days.filter(day=>{
             const dd=new Date(day.date);dd.setHours(0,0,0,0);
             return dd>=today&&day.status==='pending'&&day.type!=='rest';
         });
         if(!pending.length)return;
-        const recentW=this.d.workouts.slice(0,5).map(w=>`${w.type}: ${w.details} (${w.duration}m)`).join('\n');
-        const recentS=this.d.sleep.slice(0,3).map(s=>`${s.hours}h ${s.quality}`).join(', ');
         try{
             const raw=await claude([{role:'user',content:
-                `Expert running & strength coach. Adjust remaining schedule.
-Profile: 41M 150lbs advanced runner+weights. VO2Max goal: 50.
-Recent completions:\n${recentW||'none'}
-Recent sleep: ${recentS||'unknown'}
-Days to adjust: ${pending.map(d=>d.name).join(', ')}
-Current plan: ${pending.map(d=>`${d.name}: ${d.workout}`).join('\n')}
-Respond ONLY with JSON array for those days, no markdown:
-[{"name":"DayName","workout":"updated workout","note":"brief reason","type":"run|weights|cross|rest"}]`
+                `Expert coach. Adjust remaining schedule for 41M 150lbs runner+weights, VO2Max goal 50.
+Recent: ${this.d.workouts.slice(0,5).map(w=>`${w.type}: ${w.details}`).join(', ')||'none'}
+Sleep: ${this.d.sleep.slice(0,3).map(s=>`${s.hours}h ${s.quality}`).join(', ')||'unknown'}
+Adjust days: ${pending.map(d=>d.name).join(', ')}
+Current: ${pending.map(d=>`${d.name}: ${d.workout}`).join(' | ')}
+Respond ONLY with JSON array, no markdown: [{"name":"Day","workout":"desc","note":"reason","type":"run|weights|cross|rest"}]`
             }],600);
-            const match=raw.match(/\[[\s\S]*\]/);
-            if(!match)return;
-            const updates=JSON.parse(match[0]);
-            updates.forEach(u=>{
+            const m=raw.match(/\[[\s\S]*\]/);
+            if(!m)return;
+            JSON.parse(m[0]).forEach(u=>{
                 const idx=this.d.schedule.days.findIndex(d=>d.name===u.name);
                 if(idx>=0&&this.d.schedule.days[idx].status==='pending'){
                     this.d.schedule.days[idx].workout=u.workout;
@@ -248,48 +307,44 @@ Respond ONLY with JSON array for those days, no markdown:
                 }
             });
             this.save('schedule',this.d.schedule);this.render();
-        }catch(e){console.warn('Auto-adjust fail',e);}
+        }catch(e){console.warn('auto-adjust fail',e);}
     },
 
     async generateSchedule(weekOff=0){
         this.d.scheduleLoading=true;this.d.scheduleError=null;
         if(this.d.activeTab==='schedule')this.render();
         const weekStart=getWeekStart(weekOff);
-        const days=DAYS.map((name,i)=>{const d=new Date(weekStart);d.setDate(d.getDate()+i);return{name,date:d.toISOString()};});
-        const recentW=this.d.workouts.slice(0,10).map(w=>`${w.type}: ${w.details} (${w.duration}m) on ${fmt(w.time)}`).join('\n')||'None yet';
-        const recentS=this.d.sleep.slice(0,5).map(s=>`${s.hours}h ${s.quality} on ${fmt(s.time)}`).join('\n')||'No data';
-        const currentVo2=this.d.vo2MaxLog&&this.d.vo2MaxLog.length?this.d.vo2MaxLog[0].value:null;
-        const oldSt=this.d.schedule?this.d.schedule.days.map(d=>({name:d.name,status:d.status})):[];
+        const days=DAYS.map((n,i)=>{const d=new Date(weekStart);d.setDate(d.getDate()+i);return{name:n,date:d.toISOString()};});
+        const vo2=this.d.vo2MaxLog&&this.d.vo2MaxLog.length?this.d.vo2MaxLog[0].value:null;
         try{
             const raw=await claude([{role:'user',content:
                 `Expert running & strength coach. Create 7-day training schedule.
-Profile: 41M 150lbs advanced runner+weights
-VO2Max goal: 50${currentVo2?`, current: ${currentVo2}`:''}
-Week: ${fmt(weekStart)} (${days.map(d=>d.name).join(', ')})
-Recent workouts:\n${recentW}
-Recent sleep:\n${recentS}
-Previous statuses: ${JSON.stringify(oldSt)}
-Respond ONLY with a JSON array of exactly 7 objects. Start with [ and end with ]. No markdown, no explanation.
-[{"name":"Sunday","workout":"specific 1-2 line description","note":"1-sentence tip","type":"run|weights|cross|rest"},...]
-Rules: varied runs (easy/tempo/intervals/long), 2 strength sessions, 1-2 rest days, long run weekend, specific distances/weights, adjust for poor sleep, include VO2Max-boosting intervals.`
-            }],1200);
-            const match=raw.match(/\[[\s\S]*\]/);
-            if(!match)throw new Error(`No JSON array in response: ${raw.slice(0,200)}`);
-            const parsed=JSON.parse(match[0]);
-            if(!Array.isArray(parsed)||parsed.length===0)throw new Error('Empty or invalid array');
+Profile: 41M 150lbs advanced runner+weights. VO2Max goal: 50${vo2?`, current: ${vo2}`:''}
+Week: ${fmt(weekStart)} — days: ${days.map(d=>d.name).join(', ')}
+Recent workouts: ${this.d.workouts.slice(0,8).map(w=>`${w.type}: ${w.details} (${w.duration}m)`).join(' | ')||'none'}
+Recent sleep: ${this.d.sleep.slice(0,4).map(s=>`${s.hours}h ${s.quality}`).join(', ')||'no data'}
+Previous statuses: ${this.d.schedule?JSON.stringify(this.d.schedule.days.map(d=>({name:d.name,status:d.status}))):'none'}
+IMPORTANT: Respond with ONLY a raw JSON array. No markdown. No explanation. Start with [ end with ].
+[{"name":"Sunday","workout":"specific description","note":"1-sentence tip","type":"run|weights|cross|rest"},{"name":"Monday",...},{"name":"Tuesday",...},{"name":"Wednesday",...},{"name":"Thursday",...},{"name":"Friday",...},{"name":"Saturday",...}]
+Rules: varied runs (easy/tempo/intervals/long run on weekend), 2 strength sessions, 1-2 rest days, specific distances/weights, add VO2Max intervals 1-2x/week.`
+            }],1500);
+            const m=raw.match(/\[[\s\S]*\]/);
+            if(!m)throw new Error('No JSON array found. Response was: '+raw.slice(0,300));
+            const parsed=JSON.parse(m[0]);
+            if(!Array.isArray(parsed)||parsed.length<7)throw new Error(`Expected 7 days, got ${parsed.length}`);
             const oldDays=this.d.schedule?this.d.schedule.days:[];
             this.d.schedule={
                 weekKey:thisWeekKey(weekOff),weekStart:weekStart.toISOString(),generatedAt:new Date().toISOString(),
-                days:parsed.map((p,i)=>{
+                days:parsed.slice(0,7).map((p,i)=>{
                     const old=oldDays.find(od=>od.name===p.name);
-                    return{name:p.name,date:days[i]?days[i].date:weekStart,workout:p.workout||'Rest',note:p.note||'',type:p.type||'rest',
+                    return{name:p.name||days[i].name,date:days[i].date,workout:p.workout||'Rest',note:p.note||'',type:p.type||'rest',
                         status:old&&(old.status==='done'||old.status==='skipped')?old.status:'pending'};
                 })
             };
             this.save('schedule',this.d.schedule);this.d.scheduleError=null;
         }catch(e){
-            console.error('Schedule gen error:',e);
-            this.d.scheduleError=e.message||'Could not generate schedule.';
+            console.error('Schedule error:',e);
+            this.d.scheduleError=e.message;
         }
         this.d.scheduleLoading=false;this.render();
     },
@@ -309,17 +364,15 @@ Rules: varied runs (easy/tempo/intervals/long), 2 strength sessions, 1-2 rest da
 
     async adjustDay(idx){
         const day=this.d.schedule.days[idx];
-        const recent=this.d.workouts.slice(0,5).map(w=>`${w.type}: ${w.details}`).join(', ')||'none';
-        const slp=this.d.sleep[0]?`Last sleep: ${this.d.sleep[0].hours}h ${this.d.sleep[0].quality}`:'';
         this.d.schedule.days[idx].status='adjusting';this.render();
         try{
             const raw=await claude([{role:'user',content:
-                `Suggest alternative workout for ${day.name} replacing: "${day.workout}".
-Profile: 41M advanced runner+weights. VO2Max goal: 50. Recent: ${recent}. ${slp}
-Respond ONLY with JSON (no markdown): {"workout":"new workout","note":"reason","type":"run|weights|cross|rest"}`
+                `Alternative workout for ${day.name}, replacing: "${day.workout}".
+41M advanced runner+weights. VO2Max goal 50. Recent: ${this.d.workouts.slice(0,3).map(w=>w.details).join(', ')||'none'}.
+Respond ONLY with JSON: {"workout":"new workout","note":"reason","type":"run|weights|cross|rest"}`
             }],300);
-            const match=raw.match(/\{[\s\S]*\}/);
-            if(match){const p=JSON.parse(match[0]);this.d.schedule.days[idx]={...this.d.schedule.days[idx],...p,status:'pending'};}
+            const m=raw.match(/\{[\s\S]*\}/);
+            if(m){const p=JSON.parse(m[0]);this.d.schedule.days[idx]={...this.d.schedule.days[idx],...p,status:'pending'};}
             else this.d.schedule.days[idx].status='pending';
             this.save('schedule',this.d.schedule);
         }catch(e){this.d.schedule.days[idx].status='pending';}
@@ -327,28 +380,26 @@ Respond ONLY with JSON (no markdown): {"workout":"new workout","note":"reason","
     },
 
     getTodayLog(){const k=todayKey();if(!this.d.macroLog[k])this.d.macroLog[k]=[];return this.d.macroLog[k];},
-    getMacroTotals(entries){return entries.reduce((acc,e)=>({cal:acc.cal+(e.cal||0),protein:acc.protein+(e.protein||0),carbs:acc.carbs+(e.carbs||0),fat:acc.fat+(e.fat||0)}),{cal:0,protein:0,carbs:0,fat:0});},
+    getMacroTotals(e){return e.reduce((a,x)=>({cal:a.cal+(x.cal||0),protein:a.protein+(x.protein||0),carbs:a.carbs+(x.carbs||0),fat:a.fat+(x.fat||0)}),{cal:0,protein:0,carbs:0,fat:0});},
 
     async logMacroEntry(name){
         if(!name.trim())return;
         const btn=document.getElementById('add-macro-btn');
         if(btn){btn.textContent='…';btn.disabled=true;}
+        const safeName = name.replace(/"/g, '\\"').replace(/'/g, "\\'");
         try{
-            const todayW=this.d.schedule?this.d.schedule.days.find(d=>{const dd=new Date(d.date);dd.setHours(0,0,0,0);const td=new Date();td.setHours(0,0,0,0);return dd.toDateString()===td.toDateString();}):null;
-            const raw=await claude([{role:'user',content:
-                `Estimate macros for: "${name}". Context: 41M 150lbs runner. Today: ${todayW?todayW.workout:'rest day'}.
-Respond ONLY with JSON, no markdown: {"cal":number,"protein":number,"carbs":number,"fat":number}`
-            }],200);
-            const match=raw.match(/\{[\s\S]*\}/);
-            const macros=match?JSON.parse(match[0]):{cal:0,protein:0,carbs:0,fat:0};
-            const k=todayKey();
-            if(!this.d.macroLog[k])this.d.macroLog[k]=[];
+            const tw=this.d.schedule?this.d.schedule.days.find(d=>{const dd=new Date(d.date);dd.setHours(0,0,0,0);const td=new Date();td.setHours(0,0,0,0);return dd.toDateString()===td.toDateString();}):null;
+            const raw=await claude([{role:'user',content:`Estimate macros for: "${safeName}". 41M runner. Today: ${tw?tw.workout:'rest'}. Respond ONLY with JSON: {"cal":number,"protein":number,"carbs":number,"fat":number}`}],200);
+            const m=raw.match(/\{[\s\S]*\}/);
+            const macros=m?JSON.parse(m[0]):{cal:250,protein:20,carbs:30,fat:8};
+            const k=todayKey();if(!this.d.macroLog[k])this.d.macroLog[k]=[];
             this.d.macroLog[k].push({name,time:new Date().toISOString(),...macros});
             this.save('macroLog',this.d.macroLog);
+            console.log('Macro entry saved:',name,macros);
         }catch(e){
-            const k=todayKey();
-            if(!this.d.macroLog[k])this.d.macroLog[k]=[];
-            this.d.macroLog[k].push({name,time:new Date().toISOString(),cal:0,protein:0,carbs:0,fat:0});
+            console.error('Macro log error:',e);
+            const k=todayKey();if(!this.d.macroLog[k])this.d.macroLog[k]=[];
+            this.d.macroLog[k].push({name,time:new Date().toISOString(),cal:250,protein:20,carbs:30,fat:8});
             this.save('macroLog',this.d.macroLog);
         }
         this.render();
@@ -357,46 +408,29 @@ Respond ONLY with JSON, no markdown: {"cal":number,"protein":number,"carbs":numb
     deleteMacroEntry(idx){const k=todayKey();if(this.d.macroLog[k])this.d.macroLog[k].splice(idx,1);this.save('macroLog',this.d.macroLog);this.render();},
 
     async aiCalcTargets(){
-        const btn=document.getElementById('ai-macro-btn');
-        if(btn){btn.textContent='Calculating…';btn.disabled=true;}
-        const recentW=this.d.workouts.slice(0,5).map(w=>`${w.type}: ${w.details} (${w.duration}m)`).join(', ')||'none';
-        const todayW=this.d.schedule?this.d.schedule.days.find(d=>{const dd=new Date(d.date);dd.setHours(0,0,0,0);const td=new Date();td.setHours(0,0,0,0);return dd.toDateString()===td.toDateString();}):null;
+        const btn=document.getElementById('ai-macro-btn');if(btn){btn.textContent='Calculating…';btn.disabled=true;}
         try{
-            const raw=await claude([{role:'user',content:
-                `Calculate optimal daily macro targets. Profile: 41M 150lbs advanced runner+weights. VO2Max goal: 50.
-Today: ${todayW?todayW.workout:'rest/unknown'}. Recent: ${recentW}.
-Respond ONLY with JSON, no markdown: {"calories":number,"protein":number,"carbs":number,"fat":number,"note":"1 sentence"}`
-            }],300);
-            const match=raw.match(/\{[\s\S]*\}/);
-            if(match){
-                const r=JSON.parse(match[0]);
-                this.d.macroTargets={calories:r.calories,protein:r.protein,carbs:r.carbs,fat:r.fat};
-                this.d.macroNote=r.note;
-                this.save('macroTargets',this.d.macroTargets);
-            }
+            const tw=this.d.schedule?this.d.schedule.days.find(d=>{const dd=new Date(d.date);dd.setHours(0,0,0,0);const td=new Date();td.setHours(0,0,0,0);return dd.toDateString()===td.toDateString();}):null;
+            const raw=await claude([{role:'user',content:`Optimal daily macros for 41M 150lbs advanced runner+weights. VO2Max goal 50. Today: ${tw?tw.workout:'rest'}. Respond ONLY with JSON: {"calories":n,"protein":n,"carbs":n,"fat":n,"note":"1 sentence"}`}],300);
+            const m=raw.match(/\{[\s\S]*\}/);
+            if(m){const r=JSON.parse(m[0]);this.d.macroTargets={calories:r.calories,protein:r.protein,carbs:r.carbs,fat:r.fat};this.d.macroNote=r.note;this.save('macroTargets',this.d.macroTargets);}
         }catch(e){console.error(e);}
         this.render();
     },
 
     saveCustomTargets(){
-        const c=document.getElementById('t-cal'),p=document.getElementById('t-pro'),carbs=document.getElementById('t-carb'),f=document.getElementById('t-fat');
-        if(c&&p&&carbs&&f){
-            this.d.macroTargets={calories:parseInt(c.value)||this.d.macroTargets.calories,protein:parseInt(p.value)||this.d.macroTargets.protein,carbs:parseInt(carbs.value)||this.d.macroTargets.carbs,fat:parseInt(f.value)||this.d.macroTargets.fat};
-            this.save('macroTargets',this.d.macroTargets);this.render();
-        }
+        const c=document.getElementById('t-cal'),p=document.getElementById('t-pro'),cb=document.getElementById('t-carb'),f=document.getElementById('t-fat');
+        if(c&&p&&cb&&f){this.d.macroTargets={calories:parseInt(c.value)||2800,protein:parseInt(p.value)||180,carbs:parseInt(cb.value)||320,fat:parseInt(f.value)||85};this.save('macroTargets',this.d.macroTargets);this.render();}
     },
 
     logVo2(val){
-        const v=parseFloat(val);
-        if(isNaN(v)||v<10||v>90)return;
+        const v=parseFloat(val);if(isNaN(v)||v<10||v>90)return;
         if(!this.d.vo2MaxLog)this.d.vo2MaxLog=[];
         this.d.vo2MaxLog.unshift({value:v,date:new Date().toISOString()});
         this.save('vo2MaxLog',this.d.vo2MaxLog);
-        this.render();
         const goal=this.d.profile.vo2MaxGoal||50;
-        const diff=(goal-v).toFixed(1);
         this.d.activeTab='chat';this.render();
-        setTimeout(()=>this.sendMessage(`My VO2Max from Apple Watch is ${v}. Goal is ${goal}. ${diff>0?`I'm ${diff} points away.`:'I reached my goal!'} What training should I focus on?`),100);
+        setTimeout(()=>this.sendMessage(`My Apple Watch VO2Max is ${v}. Goal is ${goal}. ${v>=goal?'I reached my goal! How do I push further?':`I'm ${(goal-v).toFixed(1)} points away. What training should I prioritize?`}`),100);
     },
 
     async sendMessage(text,imgB64=null){
@@ -404,7 +438,7 @@ Respond ONLY with JSON, no markdown: {"calories":number,"protein":number,"carbs"
         this.d.messages.push({role:'user',content:text||'📸 Photo',time:new Date().toISOString(),imgThumb:imgB64||null});
         this.d.isLoading=true;this.render();
         const vo2=this.d.vo2MaxLog&&this.d.vo2MaxLog.length?this.d.vo2MaxLog[0].value:null;
-        const ctx=`Expert fitness/nutrition coach. Profile: 41M 150lbs advanced runner+weights. VO2Max goal: 50${vo2?`, current: ${vo2}`:''}.\nRecent: ${this.d.workouts.slice(0,3).map(w=>`${w.type}: ${w.details}`).join(', ')||'none'}. Be concise (3-5 sentences).`;
+        const ctx=`Expert fitness/nutrition coach. Profile: 41M 150lbs advanced runner+weights. VO2Max goal: 50${vo2?`, current: ${vo2}`:''}. Recent: ${this.d.workouts.slice(0,3).map(w=>w.details).join(', ')||'none'}. Be concise (3-5 sentences).`;
         try{
             const content=imgB64
                 ?[{type:'image',source:{type:'base64',media_type:'image/jpeg',data:imgB64}},{type:'text',text:`${ctx}\n\n${text||'Analyze this workout photo.'}`}]
@@ -423,11 +457,11 @@ Respond ONLY with JSON, no markdown: {"calories":number,"protein":number,"carbs"
             const b64=await toB64(file);
             const raw=await claude([{role:'user',content:[
                 {type:'image',source:{type:'base64',media_type:'image/jpeg',data:b64}},
-                {type:'text',text:'Analyze this fitness image. Respond ONLY with JSON, no markdown:\n{"type":"run|weights|cross-training|recovery","details":"1-line description","duration":minutes_as_number,"note":"1-line observation"}'}
+                {type:'text',text:'Analyze this fitness image. Respond ONLY with JSON, no markdown: {"type":"run|weights|cross-training|recovery","details":"1-line description","duration":minutes_as_number,"note":"1-line observation"}'}
             ]}],400);
-            const match=raw.match(/\{[\s\S]*\}/);
-            this.d.aiExtract=match?JSON.parse(match[0]):{type:'workout',details:'',duration:60,note:'Could not auto-detect'};
-        }catch(e){this.d.aiExtract={type:'workout',details:'',duration:60,note:'Could not auto-detect'};}
+            const m=raw.match(/\{[\s\S]*\}/);
+            this.d.aiExtract=m?JSON.parse(m[0]):{type:'workout',details:'',duration:60,note:''};
+        }catch(e){this.d.aiExtract={type:'workout',details:'',duration:60,note:''};}
         this.d.analyzing=false;this.render();
         setTimeout(()=>{
             const ex=this.d.aiExtract;if(!ex)return;
@@ -441,17 +475,32 @@ Respond ONLY with JSON, no markdown: {"calories":number,"protein":number,"carbs"
     logWorkout(type,details,duration){
         const entry={id:Date.now(),type,details,duration,time:new Date().toISOString()};
         if(this.d.photoURL)entry.photo=this.d.photoURL;
-        this.d.workouts.unshift(entry);this.save('workouts',this.d.workouts);
+        this.d.workouts.unshift(entry);
+        this.save('workouts',this.d.workouts);
+        console.log('Workout saved:',entry);
         this.d.photoData=null;this.d.photoURL=null;this.d.aiExtract=null;
-        this.d.activeTab='chat';this.render();
-        setTimeout(()=>{this.sendMessage(`Logged: ${type} — ${details} for ${duration} mins. Recovery/nutrition advice?`);this.autoAdjustSchedule();},100);
+        this.d.activeTab='chat';
+        this.render();
+        setTimeout(()=>{
+            this.sendMessage(`Logged: ${type} — ${details} for ${duration} mins. Recovery/nutrition advice?`);
+            this.autoAdjustSchedule();
+        },100);
     },
 
-    logMeal(name,desc){this.d.meals.unshift({id:Date.now(),name,description:desc,time:new Date().toISOString()});this.save('meals',this.d.meals);this.render();},
+    logMeal(name,desc){
+        const entry={id:Date.now(),name,description:desc,time:new Date().toISOString()};
+        this.d.meals.unshift(entry);
+        this.save('meals',this.d.meals);
+        console.log('Meal saved:',entry);
+        this.render();
+    },
 
     logSleep(hours,quality,notes){
-        this.d.sleep.unshift({id:Date.now(),hours:parseFloat(hours),quality,notes,time:new Date().toISOString()});
-        this.save('sleep',this.d.sleep);this.render();
+        const entry={id:Date.now(),hours:parseFloat(hours),quality,notes,time:new Date().toISOString()};
+        this.d.sleep.unshift(entry);
+        this.save('sleep',this.d.sleep);
+        console.log('Sleep saved:',entry);
+        this.render();
         this.sendMessage(`Slept ${hours} hours, quality: ${quality}.${notes?' Notes: '+notes:''} Advice for today?`);
     },
 
@@ -459,6 +508,7 @@ Respond ONLY with JSON, no markdown: {"calories":number,"protein":number,"carbs"
         document.addEventListener('click',e=>{
             const tab=e.target.closest('.tab');
             if(tab){this.d.activeTab=tab.dataset.tab;this.render();return;}
+            if(e.target.matches('#key-save-btn')){const v=document.getElementById('key-input').value.trim();this.validateAndSaveKey(v);}
             if(e.target.matches('#send-btn')){const i=document.getElementById('msg-input'),v=i.value;i.value='';this.sendMessage(v);}
             if(e.target.matches('#log-workout-btn')){
                 const t=document.getElementById('workout-type').value,d=document.getElementById('workout-details').value,dur=document.getElementById('workout-duration').value;
@@ -485,10 +535,12 @@ Respond ONLY with JSON, no markdown: {"calories":number,"protein":number,"carbs"
             const delBtn=e.target.closest('.del');if(delBtn)this.deleteMacroEntry(parseInt(delBtn.dataset.idx));
             const mvBtn=e.target.closest('.mv-btn');if(mvBtn){this.d.macroView=mvBtn.dataset.view;this.render();}
             if(e.target.matches('#log-vo2-btn')){const v=document.getElementById('vo2-input').value;if(v){this.logVo2(v);document.getElementById('vo2-input').value='';}}
+            if(e.target.matches('#reset-key')){localStorage.removeItem('anthropic_key');this.render();}
         });
         document.addEventListener('keypress',e=>{
             if(e.key==='Enter'&&e.target.matches('#msg-input')){const v=e.target.value;e.target.value='';this.sendMessage(v);}
             if(e.key==='Enter'&&e.target.matches('#macro-food-input')){const v=e.target.value;e.target.value='';this.logMacroEntry(v);}
+            if(e.key==='Enter'&&e.target.matches('#key-input')){const v=e.target.value.trim();this.validateAndSaveKey(v);}
         });
         document.addEventListener('change',e=>{
             if(e.target.matches('#file-camera')||e.target.matches('#file-gallery')){
@@ -503,6 +555,10 @@ Respond ONLY with JSON, no markdown: {"calories":number,"protein":number,"carbs"
     mb(tid,sid){if(!speechOK)return'';return`<button class="mic-btn" id="mic-${tid}" data-target="${tid}" data-status="${sid}">🎙️</button>`;},
 
     render(){
+        if(!getKey()){
+            document.getElementById('root').innerHTML=this.rSetup();
+            return;
+        }
         document.getElementById('root').innerHTML=`
         <div class="container">
             <div class="header"><h1>AI Fitness Coach</h1><p>Trainer · Nutritionist · Sleep Coach</p></div>
@@ -517,6 +573,29 @@ Respond ONLY with JSON, no markdown: {"calories":number,"protein":number,"carbs"
                 <div class="tab ${this.d.activeTab==='log'?'active':''}" data-tab="log"><div class="tab-icon">📝</div><div class="tab-label">Log</div></div>
                 <div class="tab ${this.d.activeTab==='schedule'?'active':''}" data-tab="schedule"><div class="tab-icon">📅</div><div class="tab-label">Schedule</div></div>
                 <div class="tab ${this.d.activeTab==='profile'?'active':''}" data-tab="profile"><div class="tab-icon">👤</div><div class="tab-label">Profile</div></div>
+            </div>
+        </div>`;
+    },
+
+    rSetup(){
+        return`<div class="setup-screen">
+            <div class="setup-card">
+                <h2>🏃 AI Fitness Coach</h2>
+                <p>Enter your Anthropic API key to get started. It's stored only on your device.</p>
+                <div class="setup-steps">
+                    <p>Get your free API key:</p>
+                    <ol>
+                        <li>Go to <strong>console.anthropic.com</strong></li>
+                        <li>Sign in or create an account</li>
+                        <li>Click <strong>API Keys</strong> → <strong>Create Key</strong></li>
+                        <li>Copy the key (starts with sk-ant-)</li>
+                        <li>Paste it below</li>
+                    </ol>
+                </div>
+                <div class="err" id="key-err"></div>
+                <input id="key-input" type="password" placeholder="sk-ant-api03-..." autocomplete="off" autocorrect="off" autocapitalize="off" spellcheck="false">
+                <button id="key-save-btn">Save & Continue →</button>
+                <p class="hint">Your key is saved locally on this device only.<br>Set a spend limit at console.anthropic.com for peace of mind.</p>
             </div>
         </div>`;
     },
@@ -599,27 +678,17 @@ Respond ONLY with JSON, no markdown: {"calories":number,"protein":number,"carbs"
     },
 
     rMacros(){
-        const entries=this.getTodayLog();
-        const totals=this.getMacroTotals(entries);
-        const T=this.d.macroTargets;
-        const calRemain=Math.max(0,T.calories-totals.cal);
-        const calPct=Math.min(1,totals.cal/T.calories);
-        const r=60;const circ=2*Math.PI*r;
-        const offset=circ*(1-calPct);
+        const entries=this.getTodayLog(),totals=this.getMacroTotals(entries),T=this.d.macroTargets;
+        const calRemain=Math.max(0,T.calories-totals.cal),calPct=Math.min(1,totals.cal/T.calories);
+        const r=60,circ=2*Math.PI*r,offset=circ*(1-calPct);
         const calColor=calPct>1?'#ef4444':calPct>0.85?'#f59e0b':'#2563eb';
-        const bar=(label,eaten,target,color)=>{
-            const pct=Math.min(100,(eaten/target)*100);
-            return`<div class="mbar-row">
-                <div class="mbar-label">${label}</div>
-                <div class="mbar-track"><div class="mbar-fill" style="width:${pct}%;background:${color}"></div></div>
-                <div class="mbar-nums">${Math.max(0,target-eaten)}g left</div>
-            </div>`;
-        };
+        const bar=(label,eaten,target,color)=>`<div class="mbar-row">
+            <div class="mbar-label">${label}</div>
+            <div class="mbar-track"><div class="mbar-fill" style="width:${Math.min(100,(eaten/target)*100)}%;background:${color}"></div></div>
+            <div class="mbar-nums">${Math.max(0,target-eaten)}g left</div>
+        </div>`;
         return`<div class="macro-card">
-            <div class="macro-header">
-                <h3>📊 Today's Macros</h3>
-                <div class="macro-date">${new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</div>
-            </div>
+            <div class="macro-header"><h3>📊 Today's Macros</h3><div class="macro-date">${new Date().toLocaleDateString('en-US',{weekday:'short',month:'short',day:'numeric'})}</div></div>
             <div class="macro-toggle">
                 <button class="mv-btn ${this.d.macroView==='today'?'active':''}" data-view="today">Today</button>
                 <button class="mv-btn ${this.d.macroView==='targets'?'active':''}" data-view="targets">Targets</button>
@@ -631,29 +700,16 @@ Respond ONLY with JSON, no markdown: {"calories":number,"protein":number,"carbs"
                         <circle class="cal-ring-bg" cx="65" cy="65" r="${r}"/>
                         <circle class="cal-ring-fill" cx="65" cy="65" r="${r}" stroke="${calColor}" stroke-dasharray="${circ}" stroke-dashoffset="${offset}"/>
                     </svg>
-                    <div class="cal-center">
-                        <div class="cal-remain" style="color:${calColor}">${calRemain}</div>
-                        <div class="cal-label">kcal left</div>
-                    </div>
+                    <div class="cal-center"><div class="cal-remain" style="color:${calColor}">${calRemain}</div><div class="cal-label">kcal left</div></div>
                 </div>
                 <div class="cal-sub">${totals.cal} eaten · ${T.calories} target</div>
             </div>
-            <div class="macro-bars">
-                ${bar('Protein',totals.protein,T.protein,'#2563eb')}
-                ${bar('Carbs',totals.carbs,T.carbs,'#059669')}
-                ${bar('Fat',totals.fat,T.fat,'#f59e0b')}
-            </div>
+            <div class="macro-bars">${bar('Protein',totals.protein,T.protein,'#2563eb')}${bar('Carbs',totals.carbs,T.carbs,'#059669')}${bar('Fat',totals.fat,T.fat,'#f59e0b')}</div>
             <div class="log-macro-row">
                 <input id="macro-food-input" type="text" placeholder="Add food (e.g. chicken breast 150g)…">
                 <button id="add-macro-btn">+ Add</button>
             </div>
-            ${entries.length?`<div class="macro-meals-list">
-                ${entries.map((e,i)=>`<div class="macro-meal-item">
-                    <span class="name">${e.name}</span>
-                    <span class="cals">${e.protein}p · ${e.carbs}c · ${e.fat}f · ${e.cal}cal</span>
-                    <button class="del" data-idx="${i}">✕</button>
-                </div>`).join('')}
-            </div>`:'<p style="font-size:12px;color:#9ca3af;text-align:center;margin-top:10px">No food logged yet today</p>'}
+            ${entries.length?`<div class="macro-meals-list">${entries.map((e,i)=>`<div class="macro-meal-item"><span class="name">${e.name}</span><span class="cals">${e.protein}p·${e.carbs}c·${e.fat}f·${e.cal}cal</span><button class="del" data-idx="${i}">✕</button></div>`).join('')}</div>`:'<p style="font-size:12px;color:#9ca3af;text-align:center;margin-top:10px">No food logged yet</p>'}
             `:`
             ${this.d.macroNote?`<p style="font-size:12px;color:#059669;margin-bottom:12px;font-style:italic">✅ ${this.d.macroNote}</p>`:''}
             <div class="macro-bars" style="margin-bottom:14px">
@@ -676,18 +732,14 @@ Respond ONLY with JSON, no markdown: {"calories":number,"protein":number,"carbs"
 
     rSched(){
         const today=new Date();today.setHours(0,0,0,0);
-        const weekStart=getWeekStart(this.d.weekOffset);
-        const weekEnd=new Date(weekStart);weekEnd.setDate(weekEnd.getDate()+6);
-        const key=thisWeekKey(this.d.weekOffset);
-        const match=this.d.schedule&&this.d.schedule.weekKey===key;
-        const genTime=match&&this.d.schedule.generatedAt?`Generated ${fmt(this.d.schedule.generatedAt)} · auto-updates as you log`:'';
+        const weekStart=getWeekStart(this.d.weekOffset),weekEnd=new Date(weekStart);weekEnd.setDate(weekEnd.getDate()+6);
+        const key=thisWeekKey(this.d.weekOffset),match=this.d.schedule&&this.d.schedule.weekKey===key;
         return`<div class="sched">
-            <div class="sched-top">
-                <h2>Schedule</h2>
+            <div class="sched-top"><h2>Schedule</h2>
                 <button id="force-gen" class="btn-sm" style="background:#2563eb">${this.d.scheduleLoading?'…':match?'🔄 Refresh':'✨ Generate'}</button>
             </div>
             ${this.rMacros()}
-            ${genTime?`<p class="sched-meta">${genTime}</p>`:''}
+            ${match&&this.d.schedule.generatedAt?`<p class="sched-meta">Generated ${fmt(this.d.schedule.generatedAt)} · auto-updates as you log</p>`:''}
             ${this.d.scheduleError?`<div class="err-box">⚠️ ${this.d.scheduleError}<br><button id="retry-gen" style="margin-top:8px;background:#dc2626;color:white;border:none;border-radius:6px;padding:6px 12px;cursor:pointer;font-size:12px;font-weight:600">Retry</button></div>`:''}
             <div class="week-nav">
                 <button id="prev-week" class="nav-btn">‹</button>
@@ -697,29 +749,22 @@ Respond ONLY with JSON, no markdown: {"calories":number,"protein":number,"carbs"
             ${this.d.scheduleLoading?`<div class="gen-spinner"><div class="spinner"></div><p style="color:#6b7280;font-size:14px">Building your plan…</p></div>`:
               !match?`<div style="text-align:center;padding:28px 20px;color:#6b7280">
                 <div style="font-size:40px;margin-bottom:10px">📋</div>
-                <p style="margin-bottom:16px;font-size:14px">${this.d.weekOffset===0?'Plan auto-generates Sunday evenings.<br>Tap below to generate now.':'No schedule for this week.'}</p>
+                <p style="margin-bottom:16px;font-size:14px">${this.d.weekOffset===0?'Auto-generates Sunday evenings.<br>Tap below to generate now.':'No schedule for this week.'}</p>
                 <button id="force-gen" class="btn-sm" style="background:#2563eb;padding:12px 24px">✨ Generate Now</button>
               </div>`:
               this.d.schedule.days.map((day,i)=>{
                 const dd=new Date(day.date);dd.setHours(0,0,0,0);
-                const isToday=dd.toDateString()===today.toDateString();
-                const isRest=day.type==='rest';
-                const isAdj=day.status==='adjusting';
+                const isToday=dd.toDateString()===today.toDateString(),isRest=day.type==='rest',isAdj=day.status==='adjusting';
                 let cls='day-card';
                 if(isToday)cls+=' today';
                 if(day.status==='done')cls+=' done';
                 if(day.status==='skipped')cls+=' skipped';
                 if(isRest)cls+=' rest-day';
-                const badge=isToday?`<span class="badge b-today">TODAY</span>`:
-                    day.status==='done'?`<span class="badge b-done">✓ Done</span>`:
-                    day.status==='skipped'?`<span class="badge b-skip">Skipped</span>`:'';
+                const badge=isToday?`<span class="badge b-today">TODAY</span>`:day.status==='done'?`<span class="badge b-done">✓ Done</span>`:day.status==='skipped'?`<span class="badge b-skip">Skipped</span>`:'';
                 const acts=isAdj?`<p style="font-size:12px;color:#6b7280;font-style:italic;margin-top:8px">⏳ Adjusting…</p>`:
-                    `<div class="day-acts">
-                        ${day.status==='done'||day.status==='skipped'
-                            ?`<button class="dab dab-undo" data-idx="${i}">↩ Undo</button>`
-                            :`<button class="dab dab-done" data-idx="${i}">✓ Done</button>
-                              <button class="dab dab-skip" data-idx="${i}">Skip</button>
-                              <button class="dab dab-adj" data-idx="${i}">✦ Adjust</button>`}
+                    `<div class="day-acts">${day.status==='done'||day.status==='skipped'
+                        ?`<button class="dab dab-undo" data-idx="${i}">↩ Undo</button>`
+                        :`<button class="dab dab-done" data-idx="${i}">✓ Done</button><button class="dab dab-skip" data-idx="${i}">Skip</button><button class="dab dab-adj" data-idx="${i}">✦ Adjust</button>`}
                     </div>`;
                 return`<div class="${cls}">
                     <div class="day-hdr"><div><div class="day-name">${day.name}</div><div class="day-date">${fmt(day.date)}</div></div>${badge}</div>
@@ -735,25 +780,22 @@ Respond ONLY with JSON, no markdown: {"calories":number,"protein":number,"carbs"
         const done=this.d.schedule?this.d.schedule.days.filter(d=>d.status==='done').length:0;
         const total=this.d.schedule?this.d.schedule.days.filter(d=>d.type!=='rest').length:0;
         const avgSleep=this.d.sleep.length?(this.d.sleep.slice(0,7).reduce((a,s)=>a+s.hours,0)/Math.min(this.d.sleep.length,7)).toFixed(1):'–';
-        const T=this.d.macroTargets;
-        const todayTotals=this.getMacroTotals(this.getTodayLog());
-        const vo2Log=this.d.vo2MaxLog||[];
-        const currentVo2=vo2Log.length?vo2Log[0].value:null;
-        const goal=this.d.profile.vo2MaxGoal||50;
+        const T=this.d.macroTargets,todayTotals=this.getMacroTotals(this.getTodayLog());
+        const vo2Log=this.d.vo2MaxLog||[],currentVo2=vo2Log.length?vo2Log[0].value:null,goal=50;
         const pct=currentVo2?Math.min(100,Math.round((currentVo2/goal)*100)):0;
         const sparkData=vo2Log.slice(0,8).reverse();
         const sparkMin=sparkData.length?Math.min(...sparkData.map(d=>d.value))-2:30;
         const sparkMax=Math.max(goal+2,sparkData.length?Math.max(...sparkData.map(d=>d.value))+2:52);
-        const sparkW=260,sparkH=50;
-        const toX=(i)=>sparkData.length<2?sparkW/2:Math.round((i/(sparkData.length-1))*sparkW);
-        const toY=(v)=>Math.round(sparkH-((v-sparkMin)/(sparkMax-sparkMin))*sparkH);
-        const sparkPoints=sparkData.map((d,i)=>`${toX(i)},${toY(d.value)}`).join(' ');
+        const sW=260,sH=50;
+        const toX=i=>sparkData.length<2?sW/2:Math.round((i/(sparkData.length-1))*sW);
+        const toY=v=>Math.round(sH-((v-sparkMin)/(sparkMax-sparkMin))*sH);
         const goalY=toY(goal);
         return`<div class="section">
             <div class="card"><h3>👤 Profile</h3>
-                <p style="margin-bottom:4px"><strong>Age:</strong> ${this.d.profile.age}</p>
-                <p style="margin-bottom:4px"><strong>Weight:</strong> ${this.d.profile.weight} lbs</p>
-                <p><strong>Level:</strong> ${this.d.profile.activityLevel}</p>
+                <p style="margin-bottom:4px"><strong>Age:</strong> 41</p>
+                <p style="margin-bottom:4px"><strong>Weight:</strong> 150 lbs</p>
+                <p style="margin-bottom:4px"><strong>Level:</strong> Advanced runner + gym weights</p>
+                <p style="margin-top:8px;font-size:12px;color:#6b7280;text-align:right"><button id="reset-key" style="background:none;border:none;color:#9ca3af;font-size:11px;cursor:pointer;text-decoration:underline">Reset API key</button></p>
             </div>
             <div class="card">
                 <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:12px">
@@ -762,16 +804,16 @@ Respond ONLY with JSON, no markdown: {"calories":number,"protein":number,"carbs"
                 </div>
                 <div style="display:flex;align-items:center;gap:10px;margin-bottom:6px">
                     <div style="flex:1;height:14px;background:#f3f4f6;border-radius:99px;overflow:hidden">
-                        <div style="height:100%;width:${pct}%;background:${pct>=100?'#059669':pct>=80?'#2563eb':'#7c3aed'};border-radius:99px;transition:width .6s ease"></div>
+                        <div style="height:100%;width:${pct}%;background:${pct>=100?'#059669':pct>=80?'#2563eb':'#7c3aed'};border-radius:99px"></div>
                     </div>
                     <span style="font-size:18px;font-weight:800;color:${pct>=100?'#059669':pct>=80?'#2563eb':'#7c3aed'};min-width:36px;text-align:right">${currentVo2||'–'}</span>
                 </div>
                 <p style="font-size:11px;color:#6b7280;margin-bottom:12px">${currentVo2?`${pct}% of goal · ${currentVo2>=goal?'🎉 Goal reached!':((goal-currentVo2).toFixed(1))+' points to go'}`:'No readings yet — log your first one below'}</p>
                 ${sparkData.length>1?`<div style="margin-bottom:12px;background:#f9fafb;border-radius:8px;padding:8px">
-                    <svg width="100%" viewBox="0 0 ${sparkW} ${sparkH+10}" style="overflow:visible">
-                        <line x1="0" y1="${goalY}" x2="${sparkW}" y2="${goalY}" stroke="#059669" stroke-width="1" stroke-dasharray="4,3" opacity="0.6"/>
-                        <text x="${sparkW}" y="${goalY-3}" text-anchor="end" font-size="9" fill="#059669" opacity="0.8">Goal ${goal}</text>
-                        <polyline points="${sparkPoints}" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linejoin="round"/>
+                    <svg width="100%" viewBox="0 0 ${sW} ${sH+10}" style="overflow:visible">
+                        <line x1="0" y1="${goalY}" x2="${sW}" y2="${goalY}" stroke="#059669" stroke-width="1" stroke-dasharray="4,3" opacity="0.6"/>
+                        <text x="${sW}" y="${goalY-3}" text-anchor="end" font-size="9" fill="#059669" opacity="0.8">Goal ${goal}</text>
+                        <polyline points="${sparkData.map((d,i)=>`${toX(i)},${toY(d.value)}`).join(' ')}" fill="none" stroke="#7c3aed" stroke-width="2" stroke-linejoin="round"/>
                         ${sparkData.map((d,i)=>`<circle cx="${toX(i)}" cy="${toY(d.value)}" r="3" fill="${d.value>=goal?'#059669':'#7c3aed'}"/>`).join('')}
                         ${sparkData.map((d,i)=>i===0||i===sparkData.length-1?`<text x="${toX(i)}" y="${toY(d.value)-6}" text-anchor="middle" font-size="9" fill="#374151">${d.value}</text>`:'').join('')}
                     </svg>
@@ -782,9 +824,7 @@ Respond ONLY with JSON, no markdown: {"calories":number,"protein":number,"carbs"
                     <button id="log-vo2-btn" style="background:#7c3aed;color:white;border:none;border-radius:7px;padding:10px 16px;font-size:13px;font-weight:600;cursor:pointer;white-space:nowrap">Log Reading</button>
                 </div>
                 <p style="font-size:11px;color:#9ca3af;margin-top:6px">Apple Watch → Fitness → Health Metrics → Cardio Fitness</p>
-                ${vo2Log.length?`<div style="margin-top:10px;border-top:1px solid #f3f4f6;padding-top:8px">
-                    ${vo2Log.slice(0,4).map(e=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:#6b7280"><span>${fmt(e.date)}</span><span style="font-weight:600;color:#7c3aed">${e.value} ml/kg/min</span></div>`).join('')}
-                </div>`:''}
+                ${vo2Log.length?`<div style="margin-top:10px;border-top:1px solid #f3f4f6;padding-top:8px">${vo2Log.slice(0,4).map(e=>`<div style="display:flex;justify-content:space-between;font-size:12px;padding:3px 0;color:#6b7280"><span>${fmt(e.date)}</span><span style="font-weight:600;color:#7c3aed">${e.value} ml/kg/min</span></div>`).join('')}</div>`:''}
             </div>
             <div class="card"><h3>📈 Stats</h3>
                 <div class="stats-grid">
@@ -795,7 +835,7 @@ Respond ONLY with JSON, no markdown: {"calories":number,"protein":number,"carbs"
                 </div>
             </div>
             <div class="card"><h3>⚡ Quick Ask</h3>
-                <button class="quick-btn" style="background:#7c3aed" data-msg="My current VO2Max is ${currentVo2||'unknown'} and my goal is ${goal}. What are the most effective training sessions to improve VO2Max for a 41M runner?">🫁 VO2Max Training Tips</button>
+                <button class="quick-btn" style="background:#7c3aed" data-msg="My current VO2Max is ${currentVo2||'unknown'} and my goal is ${goal}. What specific training should I prioritize to improve it?">🫁 VO2Max Training Tips</button>
                 <button class="quick-btn" style="background:#059669" data-msg="What should I eat for the rest of today? I have ${Math.max(0,T.protein-todayTotals.protein)}g protein, ${Math.max(0,T.carbs-todayTotals.carbs)}g carbs, ${Math.max(0,T.fat-todayTotals.fat)}g fat remaining.">🍽️ What to Eat Now</button>
                 <button class="quick-btn" style="background:#dc2626" data-msg="I'm feeling tired and sore. Should I train today or rest? Be direct.">🤔 Train or Rest?</button>
             </div>
